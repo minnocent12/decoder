@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Successful</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .password-reset-container {
+            margin-top: 100px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #28a745;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+        }
+        .card-body {
+            padding: 40px;
+        }
+        .alert {
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-heading {
+            margin-top: 0;
+        }
+        .btn-primary {
+            border-radius: 20px;
+            padding: 12px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 password-reset-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Password Reset Successful</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success" role="alert">
+                            <h4 class="alert-heading">Your password has been successfully updated!</h4>
+                            <p>An email containing your username and updated password has been sent to <strong>{{ email }}</strong>.</p>
+                           
+                        </div>
+                        <a href="/" class="btn btn-primary">Back to Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

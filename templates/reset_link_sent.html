@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Link Sent</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .reset-link-sent-container {
+            margin-top: 100px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+        }
+        .card-body {
+            padding: 40px;
+        }
+        .btn-primary {
+            border-radius: 20px;
+            padding: 12px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 reset-link-sent-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Reset Link Sent</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>A password reset link has been sent to the following email:</p>
+                        <p><strong>{{ email }}</strong></p>
+                        <div class="back-to-login">
+                            <a href="/">Back to Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

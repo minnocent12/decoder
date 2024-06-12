@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Successful</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .success-container {
+            margin-top: 50px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #28a745;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+        }
+        .card-body {
+            padding: 40px;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #28a745;
+            border-color: #28a745;
+            border-radius: 20px;
+            padding: 12px 20px;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 success-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Registration Successful</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Thank you for signing up! Your username has been sent to the following email:</p>
+                        <h4>{{ email }}</h4>
+                        <a href="/" class="btn btn-primary">Go to Login Page</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

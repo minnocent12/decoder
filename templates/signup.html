@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .signup-container {
+            margin-top: 50px;
+        }
+        .btn-primary {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #28a745;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+        }
+        .card-body {
+            padding: 40px;
+        }
+        .form-control {
+            border-radius: 20px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            border-radius: 20px;
+            padding: 12px 20px;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .login-link a {
+            color: #28a745;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 signup-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Sign Up</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="error-message" class="error-message" style="display: none;"></div>
+                        <form name="signupForm" id="signupForm" action="/register" method="post" onsubmit="return validateForm()">
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" name="firstname" class="form-control" placeholder="First Name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" name="lastname" class="form-control" placeholder="Last Name" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" name="email" id="email" class="form-control" placeholder="Email" required>
+                                <div id="email-error" class="error-message" style="display: none;">Email already exists.</div>
+                            </div>
+                            <div class="form-group">
+                                <input type="date" name="dob" class="form-control" placeholder="Date of Birth" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" name="phone" class="form-control" placeholder="Phone Number" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name="password" id="password" class="form-control" placeholder="Password" minlength="8" required>
+                                <div class="password-hint">Password must start with a capital letter and contain at least one number</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+                        </form>
+                        <div class="login-link">
+                            Already have an account? <a href="/">Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#email').on('input', function() {
+                var email = $(this).val();
+                $.ajax({
+                    url: '/check_email',
+                    method: 'POST',
+                    data: { email: email },
+                    success: function(response) {
+                        if (response.exists) {
+                            $('#email-error').show();
+                            $('#signupForm').attr('onsubmit', 'return false;');
+                        } else {
+                            $('#email-error').hide();
+                            $('#signupForm').attr('onsubmit', 'return validateForm();');
+                        }
+                    }
+                });
+            });
+        });
+
+        function validateForm() {
+            var passwordInput = document.forms["signupForm"]["password"];
+            var passwordValue = passwordInput.value;
+            var firstChar = passwordValue.charAt(0);
+            var hasNumber = /\d/.test(passwordValue);
+            if (firstChar !== firstChar.toUpperCase() || !hasNumber) {
+                alert("Password must start with a capital letter and contain at least one number");
+                passwordInput.focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

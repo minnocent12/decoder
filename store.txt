@@ -1,0 +1,107 @@
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message
+from datetime import datetime
+import random
+import hashlib
+import os
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SECRET_KEY'] = 'minnocent1'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'mirenge.innocent@gmail.com'
+app.config['MAIL_PASSWORD'] = 'sziq xztz tqxl zqjy'  # Replace this with the app password
+app.config['MAIL_DEFAULT_SENDER'] = 'mirenge.innocent@gmail.com'  # Set the default sender
+
+db = SQLAlchemy(app)
+mail = Mail(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    firstname = db.Column(db.String(100), nullable=False)
+    lastname = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    dob = db.Column(db.Date, nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+
+def generate_username(first_name, last_name):
+    username = (first_name[:2] + last_name).lower()
+    username += str(random.randint(10, 99))
+    return username
+
+def hash_password(password):
+    salt = os.urandom(16)
+    hashed_password = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
+    return salt + hashed_password
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+
+    user = User.query.filter_by(username=username).first()
+    if user and hashlib.pbkdf2_hmac('sha256', password.encode(), user.password[:16], 100000) == user.password[16:]:
+        return redirect(url_for('main'))
+    else:
+        return redirect(url_for('index'))
+
+@app.route('/signup')
+def signup():
+    return render_template('signup.html')
+
+@app.route('/register', methods=['POST'])
+def register():
+    firstname = request.form['firstname']
+    lastname = request.form['lastname']
+    email = request.form['email']
+    dob = datetime.strptime(request.form['dob'], '%Y-%m-%d').date()
+    phone = request.form['phone']
+    password = request.form['password']
+
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return redirect(url_for('signup', error="Email already registered"))
+
+    username = generate_username(firstname, lastname)
+    while User.query.filter_by(username=username).first():
+        username = generate_username(firstname, lastname)
+
+    hashed_password = hash_password(password)
+    user = User(firstname=firstname, lastname=lastname, email=email, dob=dob, phone=phone, username=username, password=hashed_password)
+    db.session.add(user)
+    db.session.commit()
+
+    msg = Message('Welcome to Our Website!', recipients=[email])
+    msg.body = f'Your username is: {username}\nYour password is: {password}'
+    mail.send(msg)
+
+    return redirect(url_for('index'))
+
+@app.route('/main')
+def main():
+    return render_template('main.html')
+
+@app.route('/forgot_password')
+def forgot_password():
+    return render_template('forgot_password.html')
+
+@app.route('/check_email', methods=['POST'])
+def check_email():
+    email = request.form['email']
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({'exists': True})
+    return jsonify({'exists': False})
+
+if __name__ == '__main__':
+    app.run(debug=True)
