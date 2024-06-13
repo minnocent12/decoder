@@ -15,9 +15,13 @@
             color: white;
         }
         .navbar .home-image {
+            width: 40px;
+            height: 40px;
             cursor: pointer;
         }
         .navbar .logo {
+            width: 40px;
+            height: 40px;
             margin-left: 10px;
         }
         .navbar .user-info {
@@ -63,8 +67,8 @@
 <body>
     <div class="navbar">
         <div class="left-section">
-            <img src="/path/to/home-image.png" alt="Home" class="home-image" title="My Home" onclick="location.href='{{ url_for('main') }}'">
-            <img src="/path/to/logo.png" alt="Logo" class="logo">
+            <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Home" class="home-image" title="My Home" onclick="location.href='{{ url_for('main') }}'">
+            <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Logo" class="logo">
         </div>
         <div class="user-info" onclick="toggleDropdown()">
             <div class="user-initials">{{ user_initials }}</div>
