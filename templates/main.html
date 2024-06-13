@@ -1,3 +1,5 @@
+<!-- main.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,60 +8,7 @@
     <title>Main Page</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .card-header {
-            background-color: #007bff;
-            color: #fff;
-            border-radius: 10px 10px 0 0;
-        }
-        .card-body {
-            padding: 40px;
-        }
-        .user-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .user-info .user-details {
-            display: flex;
-            align-items: center;
-        }
-        .user-info .user-details h5 {
-            margin-right: 10px;
-            font-size: 18px;
-            color: #007bff;
-        }
-        .user-info .profile-image {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .user-info .profile-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .dropdown-menu {
-            border-radius: 10px;
-            min-width: 150px;
-        }
-        .dropdown-item {
-            cursor: pointer;
-        }
+        /* Your custom styles here */
     </style>
 </head>
 <body>
@@ -74,24 +23,22 @@
                         <!-- User Info Section -->
                         <div class="user-info">
                             <!-- User Details: Firstname and Lastname -->
-                            <div class="user-details">
-                                <h5>{{ lastname }}, {{ firstname }}</h5>
-                                <!-- Profile Image with Dropdown -->
-                                <div class="dropdown">
-                                    <div class="profile-image" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <img src="{{ url_for('static', filename='profile.jpg') }}" alt="Profile Image">
-                                    </div>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <a class="dropdown-item" href="#">Settings</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="/logout">Logout</a>
-                                    </div>
+                            <h5>{{ username }}</h5>
+                            <!-- Profile Image with Dropdown -->
+                            <div class="dropdown">
+                                <div class="profile-image dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <!-- Replace 'profile.jpg' with actual profile image URL -->
+                                    <img src="{{ url_for('static', filename='/Users/mirengeinnocent/Desktop/Summer_2024/SOFTWARE_ENGINEERING-CTW/study/mini_proj/images/profile.jpg') }}" alt="Profile Image">
+                                </div>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <a class="dropdown-item" href="#">Settings</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Main Content Goes Here -->
-                        <!-- Example Content -->
                         <p>This is your main page content.</p>
                         <p>Feel free to add more features and content.</p>
                     </div>
@@ -100,7 +47,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap and JavaScript -->
+    <!-- Include Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
