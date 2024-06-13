@@ -63,6 +63,13 @@ def login():
     else:
         error_message = "Invalid username or password. Please try again."
         return render_template('index.html', error_message=error_message)
+    
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index'))
+
 
 @app.route('/signup')
 def signup():
@@ -104,7 +111,11 @@ def success():
 
 @app.route('/main')
 def main():
-    return render_template('main.html')
+    username = session.get('username', '')
+    if not username:
+        return redirect(url_for('index'))  # Redirect to login if user is not logged in
+    
+    return render_template('main.html',username=username)
 
 @app.route('/forgot_password')
 def forgot_password():

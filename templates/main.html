@@ -4,9 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 10px 10px 0 0;
+        }
+        .card-body {
+            padding: 40px;
+        }
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .user-info .user-details {
+            display: flex;
+            align-items: center;
+        }
+        .user-info .user-details h5 {
+            margin-right: 10px;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .user-info .profile-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .user-info .profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            min-width: 150px;
+        }
+        .dropdown-item {
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h2>Welcome to the Game</h2>
-    <!-- Add your game content here -->
+    <div class="container">
+        <div class="row justify-content-between align-items-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Welcome to Your Main Page</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- User Info Section -->
+                        <div class="user-info">
+                            <!-- User Details: Firstname and Lastname -->
+                            <div class="user-details">
+                                <h5>{{ lastname }}, {{ firstname }}</h5>
+                                <!-- Profile Image with Dropdown -->
+                                <div class="dropdown">
+                                    <div class="profile-image" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <img src="{{ url_for('static', filename='profile.jpg') }}" alt="Profile Image">
+                                    </div>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <a class="dropdown-item" href="#">Settings</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="/logout">Logout</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Content Goes Here -->
+                        <!-- Example Content -->
+                        <p>This is your main page content.</p>
+                        <p>Feel free to add more features and content.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap and JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
