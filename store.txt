@@ -1,107 +1,381 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message
-from datetime import datetime
-import random
-import hashlib
-import os
+<!DOCTYPE html>
+<html lang="en">
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SECRET_KEY'] = 'minnocent1'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'mirenge.innocent@gmail.com'
-app.config['MAIL_PASSWORD'] = 'sziq xztz tqxl zqjy'  # Replace this with the app password
-app.config['MAIL_DEFAULT_SENDER'] = 'mirenge.innocent@gmail.com'  # Set the default sender
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
 
-db = SQLAlchemy(app)
-mail = Mail(app)
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    firstname = db.Column(db.String(100), nullable=False)
-    lastname = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    dob = db.Column(db.Date, nullable=False)
-    phone = db.Column(db.String(15), nullable=False)
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+        .navbar .home-image {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
 
-def generate_username(first_name, last_name):
-    username = (first_name[:2] + last_name).lower()
-    username += str(random.randint(10, 99))
-    return username
+        .navbar .logo {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            margin-left: 20px; /* Add space between the home image and the logo */
+        }
 
-def hash_password(password):
-    salt = os.urandom(16)
-    hashed_password = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
-    return salt + hashed_password
+        .navbar .logo-text {
+            margin-left: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            display: inline-block;
+            vertical-align: middle;
+        }
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
 
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form['username']
-    password = request.form['password']
+        .navbar .user-info .user-initials {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            color: #007bff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
 
-    user = User.query.filter_by(username=username).first()
-    if user and hashlib.pbkdf2_hmac('sha256', password.encode(), user.password[:16], 100000) == user.password[16:]:
-        return redirect(url_for('main'))
-    else:
-        return redirect(url_for('index'))
+        .navbar .user-info .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #ffffff;
+            color: #000000;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
 
-@app.route('/signup')
-def signup():
-    return render_template('signup.html')
+        .navbar .user-info .dropdown-menu a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #000000;
+        }
 
-@app.route('/register', methods=['POST'])
-def register():
-    firstname = request.form['firstname']
-    lastname = request.form['lastname']
-    email = request.form['email']
-    dob = datetime.strptime(request.form['dob'], '%Y-%m-%d').date()
-    phone = request.form['phone']
-    password = request.form['password']
+        .navbar .user-info .dropdown-menu a:hover {
+            background-color: #f8f9fa;
+        }
 
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return redirect(url_for('signup', error="Email already registered"))
+        .content-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
 
-    username = generate_username(firstname, lastname)
-    while User.query.filter_by(username=username).first():
-        username = generate_username(firstname, lastname)
+        .content-row {
+            display: flex;
+            justify-content: space-between;
+        }
 
-    hashed_password = hash_password(password)
-    user = User(firstname=firstname, lastname=lastname, email=email, dob=dob, phone=phone, username=username, password=hashed_password)
-    db.session.add(user)
-    db.session.commit()
+        .left-section,
+        .center-section,
+        .right-section {
+            flex: 1;
+            margin: 10px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-    msg = Message('Welcome to Our Website!', recipients=[email])
-    msg.body = f'Your username is: {username}\nYour password is: {password}'
-    mail.send(msg)
+        .left-section {
+            flex: 1;
+        }
 
-    return redirect(url_for('index'))
+        .center-section {
+            flex: 2;
+            text-align: center;
+        }
 
-@app.route('/main')
-def main():
-    return render_template('main.html')
+        .right-section {
+            flex: 1;
+        }
 
-@app.route('/forgot_password')
-def forgot_password():
-    return render_template('forgot_password.html')
+        .send-receive {
+            display: flex;
+            flex-direction: column;
+        }
 
-@app.route('/check_email', methods=['POST'])
-def check_email():
-    email = request.form['email']
-    user = User.query.filter_by(email=email).first()
-    if user:
-        return jsonify({'exists': True})
-    return jsonify({'exists': False})
+        .send-receive div {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        .send-receive div:hover {
+            background-color: #d6d8db;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .button-group button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .button-group button:hover {
+            background-color: #0056b3;
+        }
+
+        .welcome-section h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section p {
+            font-size: 1.2em;
+        }
+
+        .footer {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            margin-top: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <div class="left-section">
+                <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Home" class="home-image" title="My Home" onclick="location.href='{{ url_for('main') }}'">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="logo">
+                <span class="logo-text">MeCipher</span>
+            </div>
+            <div class="user-info" onclick="toggleDropdown()">
+                <div class="user-initials">{{ user_initials }}</div>
+                <div>{{ user_full_name }}</div>
+                <div class="dropdown-menu">
+                    <a href="#">Profile</a>
+                    <a href="#">Account Settings</a>
+                    <a href="{{ url_for('index') }}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content-container">
+        <div class="content-row">
+            <div class="left-section">
+                <div class="send-receive">
+                    <div>Send</div>
+                    <div>Received</div>
+                </div>
+            </div>
+            <div class="center-section">
+                <div class="button-group">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#encryptModal">Encrypt</button>
+                    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#decryptModal">Decrypt</button>
+                </div>
+            </div>
+            <div class="right-section">
+                <div class="welcome-section">
+                    <h1>Welcome, {{ user_first_name }}!</h1>
+                    <p>We are glad to have you back. Explore our latest features and updates below.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Powered by INNOSTAR GROUP LT.</p>
+    </div>
+
+   <!-- Encrypt Modal -->
+   <div class="modal fade" id="encryptModal" tabindex="-1" aria-labelledby="encryptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="encryptModalLabel">Enter the message to Encrypt</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="encryptStep1">
+                    <input type="text" id="messageToEncrypt" class="form-control" placeholder="Type your message here">
+                    <button type="button" class="btn btn-primary mt-3" onclick="encryptMessage()">Encrypt</button>
+                </div>
+                <div id="encryptStep2" class="d-none">
+                    <p>Your cipher key: <span id="generatedCipherKey"></span></p>
+                    <button type="button" class="btn btn-secondary" onclick="copyCipherKey()">Copy Cipher Key</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Decrypt Modal -->
+<div class="modal fade" id="decryptModal" tabindex="-1" aria-labelledby="decryptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="decryptModalLabel">Enter the cipher key to Decrypt</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="cipherKeyToDecrypt" class="form-control" placeholder="Enter your cipher key here">
+                <button type="button" class="btn btn-primary mt-3" onclick="decryptMessage()">Decrypt</button>
+                <div id="decryptedMessage" class="mt-3"></div>
+                <button type="button" id="copyDecryptedMessageButton" class="btn btn-secondary mt-3" style="display: none;" onclick="copyDecryptedMessage()">Copy Decrypted Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    function encryptMessage() 
+    {
+        const message = document.getElementById('messageToEncrypt').value;
+        if (!message) {
+            alert('Please enter a message to encrypt.');
+            return;
+        }
+
+        // Simulate cipher key generation and encryption
+        const cipherKey = Math.random().toString(36).substr(2, 10);
+        document.getElementById('generatedCipherKey').textContent = cipherKey;
+
+        // Here you would typically send the message and cipher key to the server
+        fetch('/store-encrypted-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message, cipherKey })
+        }).then(response => {
+            if (response.ok) {
+                document.getElementById('encryptStep1').classList.add('d-none');
+                document.getElementById('encryptStep2').classList.remove('d-none');
+            } else {
+                alert('Failed to store the encrypted message.');
+            }
+        });
+    }
+
+    function decryptMessage() 
+    {
+        const cipherKey = document.getElementById('cipherKeyToDecrypt').value;
+        if (!cipherKey) {
+            alert('Please enter a cipher key to decrypt.');
+            return;
+        }
+
+        fetch(`/decrypt-message?cipherKey=${cipherKey}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to decrypt message.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.message) {
+                    document.getElementById('decryptedMessage').textContent = data.message;
+                    document.getElementById('copyDecryptedMessageButton').style.display = 'block'; // Show the button
+                } else {
+                    document.getElementById('decryptedMessage').textContent = 'Invalid cipher key or no message found.';
+                    document.getElementById('copyDecryptedMessageButton').style.display = 'none'; // Hide the button
+                }
+            })
+            .catch(error => {
+                console.error('Error decrypting message:', error);
+                document.getElementById('decryptedMessage').textContent = 'Error decrypting message. Please try again.';
+                document.getElementById('copyDecryptedMessageButton').style.display = 'none'; // Hide the button
+            });
+    }
+
+
+    function copyCipherKey() 
+    {
+        const cipherKey = document.getElementById('generatedCipherKey').textContent;
+        copyToClipboard(cipherKey);
+    }
+
+    function copyDecryptedMessage() {
+        const decryptedMessage = document.getElementById('decryptedMessage').textContent;
+        copyToClipboard(decryptedMessage);
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                alert('Copied to clipboard!');
+            })
+            .catch(err => {
+                console.error('Failed to copy:', err);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Reset modal content on close
+        $('#encryptModal').on('hidden.bs.modal', function () {
+            document.getElementById('encryptStep1').classList.remove('d-none');
+            document.getElementById('encryptStep2').classList.add('d-none');
+            document.getElementById('messageToEncrypt').value = '';
+        });
+
+        $('#decryptModal').on('hidden.bs.modal', function () {
+            document.getElementById('cipherKeyToDecrypt').value = '';
+            document.getElementById('decryptedMessage').textContent = '';
+            document.getElementById('copyDecryptedMessageButton').style.display = 'none'; // Hide the button
+        });
+    });
+</script>
+</body>
+</html>

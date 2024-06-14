@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import relationship
 from flask_mail import Mail, Message
 from datetime import datetime, timedelta
 import random
 import hashlib
 import os
 import jwt
+from models import db, User, EncryptedMessage  # Import models from models.py
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -18,18 +20,8 @@ app.config['MAIL_USERNAME'] = 'mirenge.innocent@gmail.com'
 app.config['MAIL_PASSWORD'] = 'sziq xztz tqxl zqjy'  # Replace this with the app password
 app.config['MAIL_DEFAULT_SENDER'] = 'mirenge.innocent@gmail.com'  # Set the default sender
 
-db = SQLAlchemy(app)
+db.init_app(app)  # Initialize db with app
 mail = Mail(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    firstname = db.Column(db.String(100), nullable=False)
-    lastname = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    dob = db.Column(db.Date, nullable=False)
-    phone = db.Column(db.String(15), nullable=False)
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
 
 def generate_username(first_name, last_name):
     username = (first_name[:2] + last_name).lower()
@@ -49,8 +41,7 @@ def verify_password(stored_password, provided_password):
 
 @app.route('/')
 def index():
-    error_message = None  # Set default error message to None
-    return render_template('index.html', error_message=error_message)
+    return render_template('index.html')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -59,17 +50,20 @@ def login():
 
     user = User.query.filter_by(username=username).first()
     if user and verify_password(user.password, password):
+        session['user_id'] = user.id  # Store user ID in session
+        session['username'] = user.username
+        flash('You have successfully logged in.', 'success')
         return redirect(url_for('main'))
     else:
-        error_message = "Invalid username or password. Please try again."
-        return render_template('index.html', error_message=error_message)
-    
+        flash('Invalid username or password. Please try again.', 'danger')
+        return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     session.pop('username', None)
+    session.pop('user_id', None)
+    flash('You have successfully logged out.', 'success')
     return redirect(url_for('index'))
-
 
 @app.route('/signup')
 def signup():
@@ -87,7 +81,8 @@ def register():
 
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        return redirect(url_for('signup', error="Email already registered"))
+        flash('Email already registered.', 'danger')
+        return redirect(url_for('signup'))
 
     username = generate_username(firstname, lastname)
     while User.query.filter_by(username=username).first():
@@ -102,16 +97,12 @@ def register():
     msg.body = f'Your username is: {username}\nYour password is: {password}'
     mail.send(msg)
 
-    return redirect(url_for('success', email=email))
-
-@app.route('/success')
-def success():
-    email = request.args.get('email')
-    return render_template('success.html', email=email)
+    flash('Registration successful. Please log in.', 'success')
+    return redirect(url_for('index'))
 
 @app.route('/main')
 def main():
-    username = session.get('username', '')
+    username = session.get('username')
     if not username:
         return redirect(url_for('index'))  # Redirect to login if user is not logged in
 
@@ -122,13 +113,12 @@ def main():
         user_first_name = user.firstname
         return render_template('main.html', user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name)
     else:
+        flash('User not found.', 'danger')
         return redirect(url_for('index'))  # Redirect to login if user is not found
-
 
 @app.route('/forgot_password')
 def forgot_password():
-    error_message = None  # Set default error message to None
-    return render_template('forgot_password.html', error_message=error_message)
+    return render_template('forgot_password.html')
 
 @app.route('/reset_password', methods=['POST'])
 def reset_password():
@@ -142,24 +132,11 @@ def reset_password():
         msg.body = f'Hi {user.firstname},\n\nPlease use the following link to reset your password: {reset_url}\n\nIf you did not request this, please ignore this email.'
         mail.send(msg)
         session['reset_email'] = user.email  # Store the email in the session
-        return redirect(url_for('reset_link_sent'))
+        flash('Password reset link has been sent to your email.', 'info')
+        return redirect(url_for('index'))
     else:
-        error_message = "The email address or username you entered does not match any account."
-        return render_template('forgot_password.html', error_message=error_message)
-
-@app.route('/reset_link_sent')
-def reset_link_sent():
-    email = session.get('reset_email', '')
-    return render_template('reset_link_sent.html', email=email)
-
-def generate_reset_token(user_id):
-    # Use JWT to generate a token with an expiration time
-    payload = {
-        'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-    }
-    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-    return token
+        flash('The email address or username you entered does not match any account.', 'danger')
+        return redirect(url_for('forgot_password'))
 
 @app.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_with_token(token):
@@ -176,27 +153,48 @@ def reset_with_token(token):
         user.password = hash_password(new_password)
         db.session.commit()
         msg = Message('Password Reset Successful', recipients=[user.email])
-        msg.body = f'Hi {user.firstname},\n\nYour password has been successfully reset. Your username is: {user.username}\nYour new password is:{new_password}\n\nIf you did not request this change, please contact us immediately.'
+        msg.body = f'Hi {user.firstname},\n\nYour password has been successfully reset. Your username is: {user.username}\nYour new password is: {new_password}\n\nIf you did not request this change, please contact us immediately.'
         mail.send(msg)
         session['reset_email'] = user.email  # Store the email in the session
         session['username'] = user.username  # Store the username in the session
-        return redirect(url_for('reset_successful'))
-    
+        flash('Your password has been reset successfully.', 'success')
+        return redirect(url_for('index'))
+
     return render_template('reset_password.html', token=token)
 
-@app.route('/reset_successful')
-def reset_successful():
-    email = session.get('reset_email', '')
-    username = session.get('username', '')
-    return render_template('reset_successful.html', email=email, username=username)
+@app.route('/store-encrypted-message', methods=['POST'])
+def store_encrypted_message():
+    data = request.json
+    user_id = session.get('user_id')
+    message = data.get('message')
+    cipher_key = data.get('cipherKey')
 
-@app.route('/check_email', methods=['POST'])
-def check_email():
-    email = request.form['email']
-    user = User.query.filter_by(email=email).first()
-    if user:
-        return jsonify({'exists': True})
-    return jsonify({'exists': False})
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'User not logged in.'}), 401
+
+    if not message or not cipher_key:
+        return jsonify({'status': 'error', 'message': 'Invalid input data.'}), 400
+
+    encrypted_message = EncryptedMessage(user_id=user_id, cipher_key=cipher_key, encrypted_message=message)
+    try:
+        db.session.add(encrypted_message)
+        db.session.commit()
+        return jsonify({'status': 'success'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/decrypt-message', methods=['GET'])
+def decrypt_message():
+    cipher_key = request.args.get('cipherKey')
+    if not cipher_key:
+        return jsonify({'message': 'Cipher key is required'}), 400
+
+    encrypted_message = EncryptedMessage.query.filter_by(cipher_key=cipher_key).first()
+    if encrypted_message:
+        return jsonify({'message': encrypted_message.encrypted_message}), 200
+    else:
+        return jsonify({'message': 'Invalid cipher key'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
