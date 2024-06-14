@@ -116,13 +116,14 @@ def main():
         return redirect(url_for('index'))  # Redirect to login if user is not logged in
 
     user = User.query.filter_by(username=username).first()
-    user_initials = user.firstname[0] + user.lastname[0] if user else ''
-    user_full_name = f"{user.firstname} {user.lastname}" if user else ''
-    
-    return render_template('main.html', user_initials=user_initials, user_full_name=user_full_name)
+    if user:
+        user_initials = f"{user.firstname[0]}{user.lastname[0]}".upper()
+        user_full_name = f"{user.firstname} {user.lastname}"
+        user_first_name = user.firstname
+        return render_template('main.html', user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name)
+    else:
+        return redirect(url_for('index'))  # Redirect to login if user is not found
 
-    
-    return render_template('main.html',username=username)
 
 @app.route('/forgot_password')
 def forgot_password():

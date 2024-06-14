@@ -1,7 +1,7 @@
 import random
 
 def main():
-    TRIES = 8
+    TRIES = 6
     DIGITS = 3
     RANGE = 10
 

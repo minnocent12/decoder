@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Page</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
         .navbar {
             display: flex;
             justify-content: space-between;
@@ -13,23 +20,23 @@
             padding: 10px;
             background-color: #007bff;
             color: white;
+            border-radius: 5px;
         }
-        .navbar .home-image {
+
+        .navbar .home-image,
+        .navbar .logo {
             width: 40px;
             height: 40px;
             cursor: pointer;
         }
-        .navbar .logo {
-            width: 40px;
-            height: 40px;
-            margin-left: 10px;
-        }
+
         .navbar .user-info {
             display: flex;
             align-items: center;
             cursor: pointer;
             position: relative;
         }
+
         .navbar .user-info .user-initials {
             width: 40px;
             height: 40px;
@@ -42,6 +49,7 @@
             margin-right: 10px;
             font-weight: bold;
         }
+
         .navbar .user-info .dropdown-menu {
             display: none;
             position: absolute;
@@ -53,40 +61,166 @@
             border-radius: 5px;
             overflow: hidden;
         }
+
         .navbar .user-info .dropdown-menu a {
             display: block;
             padding: 10px;
             text-decoration: none;
             color: #000000;
         }
+
         .navbar .user-info .dropdown-menu a:hover {
             background-color: #f8f9fa;
         }
+
+        .content-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .content-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .left-section,
+        .center-section,
+        .right-section {
+            flex: 1;
+            margin: 10px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-section {
+            flex: 1;
+        }
+
+        .center-section {
+            flex: 2;
+            text-align: center;
+        }
+
+        .right-section {
+            flex: 1;
+        }
+
+        .send-receive {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .send-receive div {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .send-receive div:hover {
+            background-color: #d6d8db;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .button-group button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .button-group button:hover {
+            background-color: #0056b3;
+        }
+
+        .welcome-section h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section p {
+            font-size: 1.2em;
+        }
+
+        .footer {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            margin-top: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
+
 <body>
-    <div class="navbar">
-        <div class="left-section">
-            <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Home" class="home-image" title="My Home" onclick="location.href='{{ url_for('main') }}'">
-            <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Logo" class="logo">
-        </div>
-        <div class="user-info" onclick="toggleDropdown()">
-            <div class="user-initials">{{ user_initials }}</div>
-            <div>{{ user_full_name }}</div>
-            <div class="dropdown-menu">
-                <a href="#">Profile</a>
-                <a href="#">Account Settings</a>
-                <a href="{{ url_for('index') }}">Logout</a>
+    <div class="navbar-container">
+        <div class="navbar">
+            <div class="left-section">
+                <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Home" class="home-image" title="My Home" onclick="location.href='{{ url_for('main') }}'">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="logo">
+            </div>
+            <div class="user-info" onclick="toggleDropdown()">
+                <div class="user-initials">{{ user_initials }}</div>
+                <div>{{ user_full_name }}</div>
+                <div class="dropdown-menu">
+                    <a href="#">Profile</a>
+                    <a href="#">Account Settings</a>
+                    <a href="{{ url_for('index') }}">Logout</a>
+                </div>
             </div>
         </div>
     </div>
+    <div class="content-container">
+        <div class="content-row">
+            <div class="left-section">
+                <div class="send-receive">
+                    <div>Send</div>
+                    <div>Received</div>
+                </div>
+            </div>
+            <div class="center-section">
+                <div class="button-group">
+                    <button onclick="location.href='#'">Encrypt</button>
+                    <button onclick="location.href='#'">Decrypt</button>
+                </div>
+            </div>
+            <div class="right-section">
+                <div class="welcome-section">
+                    <h1>Welcome, {{ user_first_name }}!</h1>
+                    <p>We are glad to have you back. Explore our latest features and updates below.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Powered by INNOSTAR GROUP LT.</p>
+    </div>
+
     <script>
         function toggleDropdown() {
             var dropdown = document.querySelector('.dropdown-menu');
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             var isClickInside = document.querySelector('.user-info').contains(event.target);
             if (!isClickInside) {
                 document.querySelector('.dropdown-menu').style.display = 'none';
@@ -94,4 +228,5 @@
         });
     </script>
 </body>
+
 </html>
