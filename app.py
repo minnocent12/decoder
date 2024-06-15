@@ -23,6 +23,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'mirenge.innocent@gmail.com'  # Set the defa
 db.init_app(app)  # Initialize db with app
 mail = Mail(app)
 
+
 def generate_username(first_name, last_name):
     username = (first_name[:2] + last_name).lower()
     username += str(random.randint(10, 99))
@@ -41,7 +42,8 @@ def verify_password(stored_password, provided_password):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    error_message = None  # Set default error message to None
+    return render_template('index.html', error_message=error_message)
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -50,20 +52,17 @@ def login():
 
     user = User.query.filter_by(username=username).first()
     if user and verify_password(user.password, password):
-        session['user_id'] = user.id  # Store user ID in session
-        session['username'] = user.username
-        flash('You have successfully logged in.', 'success')
         return redirect(url_for('main'))
     else:
-        flash('Invalid username or password. Please try again.', 'danger')
-        return redirect(url_for('index'))
+        error_message = "Invalid username or password. Please try again."
+        return render_template('index.html', error_message=error_message)
+    
 
 @app.route('/logout')
 def logout():
     session.pop('username', None)
-    session.pop('user_id', None)
-    flash('You have successfully logged out.', 'success')
     return redirect(url_for('index'))
+
 
 @app.route('/signup')
 def signup():
@@ -81,8 +80,7 @@ def register():
 
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        flash('Email already registered.', 'danger')
-        return redirect(url_for('signup'))
+        return redirect(url_for('signup', error="Email already registered"))
 
     username = generate_username(firstname, lastname)
     while User.query.filter_by(username=username).first():
@@ -97,12 +95,16 @@ def register():
     msg.body = f'Your username is: {username}\nYour password is: {password}'
     mail.send(msg)
 
-    flash('Registration successful. Please log in.', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('success', email=email))
+
+@app.route('/success')
+def success():
+    email = request.args.get('email')
+    return render_template('success.html', email=email)
 
 @app.route('/main')
 def main():
-    username = session.get('username')
+    username = session.get('username', '')
     if not username:
         return redirect(url_for('index'))  # Redirect to login if user is not logged in
 
@@ -113,12 +115,13 @@ def main():
         user_first_name = user.firstname
         return render_template('main.html', user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name)
     else:
-        flash('User not found.', 'danger')
         return redirect(url_for('index'))  # Redirect to login if user is not found
+
 
 @app.route('/forgot_password')
 def forgot_password():
-    return render_template('forgot_password.html')
+    error_message = None  # Set default error message to None
+    return render_template('forgot_password.html', error_message=error_message)
 
 @app.route('/reset_password', methods=['POST'])
 def reset_password():
@@ -132,11 +135,24 @@ def reset_password():
         msg.body = f'Hi {user.firstname},\n\nPlease use the following link to reset your password: {reset_url}\n\nIf you did not request this, please ignore this email.'
         mail.send(msg)
         session['reset_email'] = user.email  # Store the email in the session
-        flash('Password reset link has been sent to your email.', 'info')
-        return redirect(url_for('index'))
+        return redirect(url_for('reset_link_sent'))
     else:
-        flash('The email address or username you entered does not match any account.', 'danger')
-        return redirect(url_for('forgot_password'))
+        error_message = "The email address or username you entered does not match any account."
+        return render_template('forgot_password.html', error_message=error_message)
+
+@app.route('/reset_link_sent')
+def reset_link_sent():
+    email = session.get('reset_email', '')
+    return render_template('reset_link_sent.html', email=email)
+
+def generate_reset_token(user_id):
+    # Use JWT to generate a token with an expiration time
+    payload = {
+        'user_id': user_id,
+        'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+    }
+    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+    return token
 
 @app.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_with_token(token):
@@ -153,14 +169,29 @@ def reset_with_token(token):
         user.password = hash_password(new_password)
         db.session.commit()
         msg = Message('Password Reset Successful', recipients=[user.email])
-        msg.body = f'Hi {user.firstname},\n\nYour password has been successfully reset. Your username is: {user.username}\nYour new password is: {new_password}\n\nIf you did not request this change, please contact us immediately.'
+        msg.body = f'Hi {user.firstname},\n\nYour password has been successfully reset. Your username is: {user.username}\nYour new password is:{new_password}\n\nIf you did not request this change, please contact us immediately.'
         mail.send(msg)
         session['reset_email'] = user.email  # Store the email in the session
         session['username'] = user.username  # Store the username in the session
-        flash('Your password has been reset successfully.', 'success')
-        return redirect(url_for('index'))
-
+        return redirect(url_for('reset_successful'))
+    
     return render_template('reset_password.html', token=token)
+
+@app.route('/reset_successful')
+def reset_successful():
+    email = session.get('reset_email', '')
+    username = session.get('username', '')
+    return render_template('reset_successful.html', email=email, username=username)
+
+@app.route('/check_email', methods=['POST'])
+def check_email():
+    email = request.form['email']
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({'exists': True})
+    return jsonify({'exists': False})
+
+    
 
 @app.route('/store-encrypted-message', methods=['POST'])
 def store_encrypted_message():

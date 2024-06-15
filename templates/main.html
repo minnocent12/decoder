@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <style>
-        
         .navbar-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -35,7 +34,7 @@
             width: 40px;
             height: 40px;
             cursor: pointer;
-            margin-left: 20px; /* Add space between the home image and the logo */
+            margin-left: 20px;
         }
 
         .navbar .logo-text {
@@ -65,29 +64,6 @@
             align-items: center;
             margin-right: 10px;
             font-weight: bold;
-        }
-
-        .navbar .user-info .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: #ffffff;
-            color: #000000;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .navbar .user-info .dropdown-menu a {
-            display: block;
-            padding: 10px;
-            text-decoration: none;
-            color: #000000;
-        }
-
-        .navbar .user-info .dropdown-menu a:hover {
-            background-color: #f8f9fa;
         }
 
         .content-container {
@@ -195,13 +171,15 @@
                 <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="logo">
                 <span class="logo-text">MeCipher</span>
             </div>
-            <div class="user-info" onclick="toggleDropdown()">
-                <div class="user-initials">{{ user_initials }}</div>
-                <div>{{ user_full_name }}</div>
-                <div class="dropdown-menu">
-                    <a href="#">Profile</a>
-                    <a href="#">Account Settings</a>
-                    <a href="{{ url_for('index') }}">Logout</a>
+            <div class="user-info dropdown">
+                <div class="d-flex align-items-center" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div class="user-initials">{{ user_initials }}</div>
+                    <div>{{ user_full_name }}</div>
+                </div>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="#">Profile</a>
+                    <a class="dropdown-item" href="#">Account Settings</a>
+                    <a class="dropdown-item" href="{{ url_for('index') }}">Logout</a>
                 </div>
             </div>
         </div>
@@ -250,7 +228,7 @@
                 <div id="encryptStep2" class="d-none">
                     <p>Your cipher key: <span id="generatedCipherKey"></span></p>
                     <button type="button" class="btn btn-secondary" onclick="copyCipherKey()">Copy Cipher Key</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                   
                 </div>
             </div>
             <div class="modal-footer">
@@ -297,6 +275,28 @@
  
  
  <script>
+     $(document).ready(function() 
+        {
+            $('.dropdown-toggle').dropdown();
+        });
+
+        function toggleDropdown() {
+            const dropdownMenu = document.querySelector('.navbar .user-info .dropdown-menu');
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-info, .user-info *')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    const openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === 'block') {
+                        openDropdown.style.display = 'none';
+                    }
+                }
+            }
+        }  
+
     function encryptMessage() 
     {
         const message = document.getElementById('messageToEncrypt').value;
@@ -402,17 +402,6 @@
         dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
     }
 
-    window.onclick = function(event) {
-        if (!event.target.matches('.user-info')) {
-            const dropdowns = document.getElementsByClassName("dropdown-menu");
-            for (let i = 0; i < dropdowns.length; i++) {
-                const openDropdown = dropdowns[i];
-                if (openDropdown.style.display === 'block') {
-                    openDropdown.style.display = 'none';
-                }
-            }
-        }
-    }
 </script>
 </body>
 
