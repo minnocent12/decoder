@@ -8,7 +8,7 @@
         <div class="cipher-key-item">
             <span class="cipher-key">{{ cipher_key.cipher_key }}</span>
             <button type="button" class="btn btn-secondary btn-sm copy-btn" onclick="copyCipherKey('{{ cipher_key.cipher_key }}')">Copy</button>
-            <button type="button" class="btn btn-danger btn-sm delete-btn" onclick="deleteCipherKey('{{ cipher_key.id }}')">Delete</button>
+            <button type="button" class="btn btn-secondary btn-sm delete-btn" onclick="deleteCipherKey('{{ cipher_key.id }}')">Delete</button>
         </div>
         {% endfor %}
     </div>
