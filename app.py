@@ -226,6 +226,54 @@ def decrypt_message():
         return jsonify({'message': encrypted_message.encrypted_message}), 200
     else:
         return jsonify({'message': 'Invalid cipher key'}), 404
+    
+
+@app.route('/send')
+def send_page():
+    username = session.get('username', '')
+    if not username:
+        return redirect(url_for('index'))  # Redirect to login if user is not logged in
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        user_initials = f"{user.firstname[0]}{user.lastname[0]}".upper()
+        user_full_name = f"{user.firstname} {user.lastname}"
+        user_first_name = user.firstname
+        cipher_keys = EncryptedMessage.query.filter_by(user_id=user.id).all()
+        return render_template('send.html',user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name,cipher_keys=cipher_keys)
+    else:
+        return redirect(url_for('index'))  # Redirect to login if user is not found
+
+
+
+@app.route('/received')
+def received_page():
+    username = session.get('username', '')
+    if not username:
+        return redirect(url_for('index'))  # Redirect to login if user is not logged in
+
+    user = User.query.filter_by(username=username).first()
+    if user:
+        received_messages = EncryptedMessage.query.filter_by(user_id=user.id).all()
+        return render_template('received.html', received_messages=received_messages)
+    else:
+        return redirect(url_for('index'))  # Redirect to login if user is not found
+    
+
+@app.route('/delete-cipher-key/<int:cipher_id>', methods=['DELETE'])
+def delete_cipher_key(cipher_id):
+    user_id = session.get('user_id')
+    cipher = EncryptedMessage.query.filter_by(id=cipher_id, user_id=user_id).first()
+    if cipher:
+        try:
+            db.session.delete(cipher)
+            db.session.commit()
+            return jsonify({'status': 'success'}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+    else:
+        return jsonify({'status': 'error', 'message': 'Cipher key not found or unauthorized.'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

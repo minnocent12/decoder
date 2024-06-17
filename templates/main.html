@@ -115,18 +115,36 @@
             border-radius: 5px;
             text-align: center;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
 
         .send-receive div:hover {
             background-color: #d6d8db;
         }
 
-        .button-group {
-            display: flex;
-            justify-content: space-around;
+        .send-receive a.no-underline 
+        {
+            text-decoration: none;
+            color: inherit;
+            display: block; /* Makes the whole div area clickable */
+            height: 100%;
+            width: 100%;
         }
 
-        .button-group button {
+        .send-receive a.no-underline:hover 
+        {
+            text-decoration: none;
+        }
+
+        .button-group 
+        {
+            display: flex;
+            justify-content: center; /* Center the buttons */
+            margin-bottom: 20px; /* Add some space between the button groups */
+        }
+
+        .button-group button 
+        {
             padding: 10px 20px;
             font-size: 1.2em;
             border: none;
@@ -134,11 +152,13 @@
             background-color: #007bff;
             color: white;
             cursor: pointer;
+            margin: 10px 0; /* Add horizontal space between buttons */
         }
 
         .button-group button:hover {
             background-color: #0056b3;
         }
+        
 
         .welcome-section h1 {
             font-size: 2em;
@@ -159,6 +179,45 @@
             background-color: #f8f9fa;
             margin-top: 20px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+
+        }
+
+        .scrollable-list {
+            max-height: 300px;  /* Adjust height as needed */
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .cipher-key-item, .message-item 
+        {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #ccc; 
+                
+
+        }
+
+        .cipher-key-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .cipher-key {
+            flex: 0 0 15ch; /* Adjust this value to align properly */
+            margin-right: 10px; /* Optional: Add some space between the key and the buttons */
+        }
+        .copy-btn 
+        {
+            flex: 0 0 4ch; /* Adjust this value to align properly */
+            margin-right: 10px; /* Optional: Add some space between the buttons */
+            
+        }
+
+        .delete-btn 
+        {
+            
+            flex: 0 0 6ch; /* Adjust this value to align properly */
         }
     </style>
 </head>
@@ -188,14 +247,26 @@
         <div class="content-row">
             <div class="left-section">
                 <div class="send-receive">
-                    <div>Send</div>
-                    <div>Received</div>
+                    <div>
+                        <a href="{{ url_for('send_page') }}" class="no-underline full-link">Send</a>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('received_page') }}" class="no-underline full-link">Received</a>
+                    </div>
                 </div>
+                
             </div>
             <div class="center-section">
-                <div class="button-group">
+                {% block center_content %}
+                
+                <div class="button-group">  
+                    
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#encryptModal">Encrypt</button>
-                    <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#decryptModal">Decrypt</button>
+                </div>
+                {% endblock %}
+                <div class="button-group">
+
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#decryptModal">Decrypt</button>
                 </div>
             </div>
             <div class="right-section">
@@ -388,6 +459,8 @@
         });
 
     </script>
+    {% block scripts %}
+    {% endblock %}
 </body>
 
 </html>

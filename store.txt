@@ -1,231 +1,409 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship
-from flask_mail import Mail, Message
-from datetime import datetime, timedelta
-import random
-import hashlib
-import os
-import jwt
-from models import db, User, EncryptedMessage  # Import models from models.py
+<!DOCTYPE html>
+<html lang="en">
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SECRET_KEY'] = 'minnocent1'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'mirenge.innocent@gmail.com'
-app.config['MAIL_PASSWORD'] = 'sziq xztz tqxl zqjy'  # Replace this with the app password
-app.config['MAIL_DEFAULT_SENDER'] = 'mirenge.innocent@gmail.com'  # Set the default sender
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
 
-db.init_app(app)  # Initialize db with app
-mail = Mail(app)
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
 
+        .navbar .home-image {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
 
-def generate_username(first_name, last_name):
-    username = (first_name[:2] + last_name).lower()
-    username += str(random.randint(10, 99))
-    return username
+        .navbar .logo {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            margin-left: 20px;
+        }
 
-def hash_password(password):
-    salt = os.urandom(16)
-    hashed_password = hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
-    return salt + hashed_password
+        .navbar .logo-text {
+            margin-left: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+            display: inline-block;
+            vertical-align: middle;
+        }
 
-def verify_password(stored_password, provided_password):
-    salt = stored_password[:16]
-    stored_hash = stored_password[16:]
-    provided_hash = hashlib.pbkdf2_hmac('sha256', provided_password.encode(), salt, 100000)
-    return stored_hash == provided_hash
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
 
-@app.route('/')
-def index():
-    error_message = None  # Set default error message to None
-    return render_template('index.html', error_message=error_message)
+        .navbar .user-info .user-initials {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            color: #007bff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
 
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form['username']
-    password = request.form['password']
+        .content-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
 
-    user = User.query.filter_by(username=username).first()
-    if user and verify_password(user.password, password):
-        return redirect(url_for('main'))
-    else:
-        error_message = "Invalid username or password. Please try again."
-        return render_template('index.html', error_message=error_message)
-    
+        .content-row {
+            display: flex;
+            justify-content: space-between;
+        }
 
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('index'))
+        .left-section,
+        .center-section,
+        .right-section {
+            flex: 1;
+            margin: 10px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
+        .left-section {
+            flex: 1;
+        }
 
-@app.route('/signup')
-def signup():
-    error = request.args.get('error')
-    return render_template('signup.html', error=error)
+        .center-section {
+            flex: 2;
+            text-align: center;
+        }
 
-@app.route('/register', methods=['POST'])
-def register():
-    firstname = request.form['firstname']
-    lastname = request.form['lastname']
-    email = request.form['email']
-    dob = datetime.strptime(request.form['dob'], '%Y-%m-%d').date()
-    phone = request.form['phone']
-    password = request.form['password']
+        .right-section {
+            flex: 1;
+        }
 
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        return redirect(url_for('signup', error="Email already registered"))
+        .send-receive {
+            display: flex;
+            flex-direction: column;
+        }
 
-    username = generate_username(firstname, lastname)
-    while User.query.filter_by(username=username).first():
-        username = generate_username(firstname, lastname)
+        .send-receive div {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
 
-    hashed_password = hash_password(password)
-    user = User(firstname=firstname, lastname=lastname, email=email, dob=dob, phone=phone, username=username, password=hashed_password)
-    db.session.add(user)
-    db.session.commit()
+        .send-receive div:hover {
+            background-color: #d6d8db;
+        }
 
-    msg = Message('Welcome to Our Website!', recipients=[email])
-    msg.body = f'Your username is: {username}\nYour password is: {password}'
-    mail.send(msg)
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+        }
 
-    return redirect(url_for('success', email=email))
+        .button-group button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
 
-@app.route('/success')
-def success():
-    email = request.args.get('email')
-    return render_template('success.html', email=email)
+        .button-group button:hover {
+            background-color: #0056b3;
+        }
 
-@app.route('/main')
-def main():
-    username = session.get('username', '')
-    if not username:
-        return redirect(url_for('index'))  # Redirect to login if user is not logged in
+        .welcome-section h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
 
-    user = User.query.filter_by(username=username).first()
-    if user:
-        user_initials = f"{user.firstname[0]}{user.lastname[0]}".upper()
-        user_full_name = f"{user.firstname} {user.lastname}"
-        user_first_name = user.firstname
-        return render_template('main.html', user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name)
-    else:
-        return redirect(url_for('index'))  # Redirect to login if user is not found
+        .welcome-section p {
+            font-size: 1.2em;
+        }
 
+        .footer {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            margin-top: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-@app.route('/forgot_password')
-def forgot_password():
-    error_message = None  # Set default error message to None
-    return render_template('forgot_password.html', error_message=error_message)
+        .scrollable-list {
+            max-height: 300px;  /* Adjust height as needed */
+            overflow-y: auto;
+        }
+        .cipher-key-item, .message-item 
+        {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        
+    </style>
+</head>
 
-@app.route('/reset_password', methods=['POST'])
-def reset_password():
-    email_or_username = request.form['email']
-    user = User.query.filter((User.email == email_or_username) | (User.username == email_or_username)).first()
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <div class="left-section">
+                <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Home" class="home-image" title="My Home" onclick="location.href='{{ url_for('main') }}'">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="logo">
+                <span class="logo-text">MeCipher</span>
+            </div>
+            <div class="user-info dropdown">
+                <div class="d-flex align-items-center" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div class="user-initials">{{ user_initials }}</div>
+                    <div>{{ user_full_name }}</div>
+                </div>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="#">Profile</a>
+                    <a class="dropdown-item" href="#">Account Settings</a>
+                    <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content-container">
+        <div class="content-row">
+            <div class="left-section">
+                <div class="send-receive">
+                    <div> <a href="{{ url_for('send_page') }}">Send</a></div>
+                    <div><a href="{{ url_for('received_page') }}">Received</a></div>
+                </div>
+            </div>
+            <div class="center-section">
+                {% block center_content %}
+                {% endblock %}
+            </div>
+            <div class="right-section">
+                <div class="welcome-section">
+                    <h1>Welcome, {{ user_first_name }}!</h1>
+                    <p>We are glad to have you back. Explore our latest features and updates below.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Powered by INNOSTAR GROUP LT.</p>
+    </div>
 
-    if user:
-        reset_token = generate_reset_token(user.id)
-        reset_url = url_for('reset_with_token', token=reset_token, _external=True)
-        msg = Message('Password Reset Request', recipients=[user.email])
-        msg.body = f'Hi {user.firstname},\n\nPlease use the following link to reset your password: {reset_url}\n\nIf you did not request this, please ignore this email.'
-        mail.send(msg)
-        session['reset_email'] = user.email  # Store the email in the session
-        return redirect(url_for('reset_link_sent'))
-    else:
-        error_message = "The email address or username you entered does not match any account."
-        return render_template('forgot_password.html', error_message=error_message)
+    <!-- Encrypt Modal -->
+    <div class="modal fade" id="encryptModal" tabindex="-1" aria-labelledby="encryptModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="encryptModalLabel">Enter the message to Encrypt</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="encryptStep1">
+                        <input type="text" id="messageToEncrypt" class="form-control" placeholder="Type your message here">
+                        <button type="button" class="btn btn-primary mt-3" onclick="encryptMessage()">Encrypt</button>
+                    </div>
+                    <div id="encryptStep2" class="d-none">
+                        <p>Your cipher key: <span id="generatedCipherKey"></span></p>
+                        <button type="button" class="btn btn-secondary" onclick="copyCipherKey()">Copy Cipher Key</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-@app.route('/reset_link_sent')
-def reset_link_sent():
-    email = session.get('reset_email', '')
-    return render_template('reset_link_sent.html', email=email)
+    <!-- Decrypt Modal -->
+    <div class="modal fade" id="decryptModal" tabindex="-1" aria-labelledby="decryptModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="decryptModalLabel">Enter the cipher key to Decrypt</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="cipherKeyToDecrypt" class="form-control" placeholder="Enter your cipher key here">
+                    <button type="button" class="btn btn-primary mt-3" onclick="decryptMessage()">Decrypt</button>
+                    <div id="decryptedMessage" class="mt-3"></div>
+                    <button id="copyDecryptedMessageButton" type="button" class="btn btn-secondary mt-3" onclick="copyDecryptedMessage()" style="display:none;">Copy Decrypted Message</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-def generate_reset_token(user_id):
-    # Use JWT to generate a token with an expiration time
-    payload = {
-        'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-    }
-    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-    return token
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
-@app.route('/reset/<token>', methods=['GET', 'POST'])
-def reset_with_token(token):
-    try:
-        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-        user_id = payload['user_id']
-    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
-        flash('The reset link is invalid or has expired.', 'danger')
-        return redirect(url_for('index'))
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
-    if request.method == 'POST':
-        new_password = request.form['password']
-        user = User.query.get(user_id)
-        user.password = hash_password(new_password)
-        db.session.commit()
-        msg = Message('Password Reset Successful', recipients=[user.email])
-        msg.body = f'Hi {user.firstname},\n\nYour password has been successfully reset. Your username is: {user.username}\nYour new password is:{new_password}\n\nIf you did not request this change, please contact us immediately.'
-        mail.send(msg)
-        session['reset_email'] = user.email  # Store the email in the session
-        session['username'] = user.username  # Store the username in the session
-        return redirect(url_for('reset_successful'))
-    
-    return render_template('reset_password.html', token=token)
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-@app.route('/reset_successful')
-def reset_successful():
-    email = session.get('reset_email', '')
-    username = session.get('username', '')
-    return render_template('reset_successful.html', email=email, username=username)
+    <script>
+        $(document).ready(function () {
+            $('.dropdown-toggle').dropdown();
+        });
 
-@app.route('/check_email', methods=['POST'])
-def check_email():
-    email = request.form['email']
-    user = User.query.filter_by(email=email).first()
-    if user:
-        return jsonify({'exists': True})
-    return jsonify({'exists': False})
+        window.onclick = function (event) {
+            if (!event.target.matches('.user-info, .user-info *')) {
+                const dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    const openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === 'block') {
+                        openDropdown.style.display = 'none';
+                    }
+                }
+            }
+        }
 
-    
+        function encryptMessage() {
+            const message = document.getElementById('messageToEncrypt').value;
+            if (!message) {
+                toastr.warning('Please enter a message to encrypt.');
+                return;
+            }
 
-@app.route('/store-encrypted-message', methods=['POST'])
-def store_encrypted_message():
-    data = request.json
-    user_id = session.get('user_id')
-    message = data.get('message')
-    cipher_key = data.get('cipherKey')
+            const cipherKey = Math.random().toString(36).substr(2, 10);
+            document.getElementById('generatedCipherKey').textContent = cipherKey;
 
-    if not user_id:
-        return jsonify({'status': 'error', 'message': 'User not logged in.'}), 401
+            fetch('/store-encrypted-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Add CSRF token for protection
+                },
+                body: JSON.stringify({ message, cipherKey })
+            }).then(response => {
+                if (response.ok) {
+                    document.getElementById('encryptStep1').classList.add('d-none');
+                    document.getElementById('encryptStep2').classList.remove('d-none');
+                    toastr.success('Message encrypted successfully.');
+                } else {
+                    toastr.error('Failed to store the encrypted message.');
+                }
+            });
+        }
 
-    if not message or not cipher_key:
-        return jsonify({'status': 'error', 'message': 'Invalid input data.'}), 400
+        function decryptMessage() {
+            const cipherKey = document.getElementById('cipherKeyToDecrypt').value;
+            if (!cipherKey) {
+                toastr.warning('Please enter a cipher key to decrypt.');
+                return;
+            }
 
-    encrypted_message = EncryptedMessage(user_id=user_id, cipher_key=cipher_key, encrypted_message=message)
-    try:
-        db.session.add(encrypted_message)
-        db.session.commit()
-        return jsonify({'status': 'success'}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+            fetch(`/decrypt-message?cipherKey=${cipherKey}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to decrypt message.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.message) {
+                        document.getElementById('decryptedMessage').textContent = data.message;
+                        document.getElementById('copyDecryptedMessageButton').style.display = 'block';
+                        toastr.success('Message decrypted successfully.');
+                    } else {
+                        document.getElementById('decryptedMessage').textContent = 'Invalid cipher key or no message found.';
+                        document.getElementById('copyDecryptedMessageButton').style.display = 'none';
+                        toastr.error('Invalid cipher key or no message found.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error decrypting message:', error);
+                    document.getElementById('decryptedMessage').textContent = 'Error decrypting message. Please try again.';
+                    document.getElementById('copyDecryptedMessageButton').style.display = 'none';
+                    toastr.error('Error decrypting message. Please try again.');
+                });
+        }
 
-@app.route('/decrypt-message', methods=['GET'])
-def decrypt_message():
-    cipher_key = request.args.get('cipherKey')
-    if not cipher_key:
-        return jsonify({'message': 'Cipher key is required'}), 400
+        function copyCipherKey() {
+            const cipherKey = document.getElementById('generatedCipherKey').textContent;
+            copyToClipboard(cipherKey);
+            toastr.info('Cipher key copied to clipboard.');
+        }
 
-    encrypted_message = EncryptedMessage.query.filter_by(cipher_key=cipher_key).first()
-    if encrypted_message:
-        return jsonify({'message': encrypted_message.encrypted_message}), 200
-    else:
-        return jsonify({'message': 'Invalid cipher key'}), 404
+        function copyDecryptedMessage() {
+            const decryptedMessage = document.getElementById('decryptedMessage').textContent;
+            copyToClipboard(decryptedMessage);
+            toastr.info('Decrypted message copied to clipboard.');
+        }
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    toastr.success('Copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    toastr.error('Failed to copy to clipboard.');
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            $('#encryptModal').on('hidden.bs.modal', function () {
+                document.getElementById('encryptStep1').classList.remove('d-none');
+                document.getElementById('encryptStep2').classList.add('d-none');
+                document.getElementById('messageToEncrypt').value = '';
+            });
+
+            $('#decryptModal').on('hidden.bs.modal', function () {
+                document.getElementById('cipherKeyToDecrypt').value = '';
+                document.getElementById('decryptedMessage').textContent = '';
+                document.getElementById('copyDecryptedMessageButton').style.display = 'none';
+            });
+        });
+
+    </script>
+    {% block scripts %}
+    {% endblock %}
+
+</body>
+
+</html>

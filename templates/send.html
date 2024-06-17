@@ -1,0 +1,47 @@
+{% extends 'main.html' %}
+
+{% block center_content %}
+<div class="cipher-key-list">
+    <h2>Cipher Key List</h2>
+    <div class="scrollable-list">
+        {% for cipher_key in cipher_keys %}
+        <div class="cipher-key-item">
+            <span class="cipher-key">{{ cipher_key.cipher_key }}</span>
+            <button type="button" class="btn btn-secondary btn-sm copy-btn" onclick="copyCipherKey('{{ cipher_key.cipher_key }}')">Copy</button>
+            <button type="button" class="btn btn-danger btn-sm delete-btn" onclick="deleteCipherKey('{{ cipher_key.id }}')">Delete</button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function deleteCipherKey(cipherId) {
+        fetch(`/delete-cipher-key/${cipherId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Add CSRF token for protection if needed
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();  // Reload the page to reflect the deletion
+            } else {
+                toastr.error('Failed to delete the cipher key.');
+            }
+        }).catch(error => {
+            console.error('Error deleting cipher key:', error);
+            toastr.error('Error deleting cipher key. Please try again.');
+        });
+    }
+
+    function copyCipherKey(cipherKey) {
+        navigator.clipboard.writeText(cipherKey).then(() => {
+            toastr.info('Cipher key copied to clipboard.');
+        }).catch(err => {
+            console.error('Failed to copy cipher key:', err);
+            toastr.error('Failed to copy cipher key to clipboard.');
+        });
+    }
+</script>
+{% endblock %}
