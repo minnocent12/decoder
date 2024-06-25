@@ -7,7 +7,7 @@ import random
 import hashlib
 import os
 import jwt
-from models import db, User, EncryptedMessage  # Import models from models.py
+from models import db, User, EncryptedMessage, DecryptedMessage  # Import models from models.py
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -52,6 +52,8 @@ def login():
 
     user = User.query.filter_by(username=username).first()
     if user and verify_password(user.password, password):
+        session['username'] = username
+        session['user_id'] = user.id  # Store user_id in session
         return redirect(url_for('main'))
     else:
         error_message = "Invalid username or password. Please try again."
@@ -101,6 +103,8 @@ def register():
 def success():
     email = request.args.get('email')
     return render_template('success.html', email=email)
+
+
 
 @app.route('/main')
 def main():
@@ -215,23 +219,39 @@ def store_encrypted_message():
         db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+
 @app.route('/decrypt-message', methods=['GET'])
 def decrypt_message():
+    user_id = session.get('user_id')
     cipher_key = request.args.get('cipherKey')
+
+    if not user_id:
+        return jsonify({'status': 'error', 'message': 'User not logged in.'}), 401
+
     if not cipher_key:
         return jsonify({'message': 'Cipher key is required'}), 400
 
     encrypted_message = EncryptedMessage.query.filter_by(cipher_key=cipher_key).first()
     if encrypted_message:
         return jsonify({'message': encrypted_message.encrypted_message}), 200
-    else:
-        return jsonify({'message': 'Invalid cipher key'}), 404
     
+    decrypted_message = DecryptedMessage(user_id=user_id, cipher_key=cipher_key, encrypted_message=encrypted_message,date_time=datetime.utcnow())
+    try:
+        db.session.add(decrypted_message)
+        db.session.commit()
+        return jsonify({'status': 'success'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+    
+
 
 @app.route('/send')
 def send_page():
     username = session.get('username', '')
-    if not username:
+    user_id = session.get('user_id')  # Retrieve user_id from session
+    if not username or not user_id:
         return redirect(url_for('index'))  # Redirect to login if user is not logged in
 
     user = User.query.filter_by(username=username).first()
@@ -239,26 +259,28 @@ def send_page():
         user_initials = f"{user.firstname[0]}{user.lastname[0]}".upper()
         user_full_name = f"{user.firstname} {user.lastname}"
         user_first_name = user.firstname
-        cipher_keys = EncryptedMessage.query.filter_by(user_id=user.id).all()
-        return render_template('send.html',user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name,cipher_keys=cipher_keys)
+        cipher_keys = EncryptedMessage.query.filter_by(user_id=user_id).all()  # Filter by user_id
+        return render_template('send.html', user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name, cipher_keys=cipher_keys)
     else:
         return redirect(url_for('index'))  # Redirect to login if user is not found
-
-
 
 @app.route('/received')
 def received_page():
     username = session.get('username', '')
-    if not username:
+    user_id = session.get('user_id')  # Retrieve user_id from session
+    if not username or not user_id:
         return redirect(url_for('index'))  # Redirect to login if user is not logged in
 
     user = User.query.filter_by(username=username).first()
     if user:
-        received_messages = EncryptedMessage.query.filter_by(user_id=user.id).all()
-        return render_template('received.html', received_messages=received_messages)
+        user_initials = f"{user.firstname[0]}{user.lastname[0]}".upper()
+        user_full_name = f"{user.firstname} {user.lastname}"
+        user_first_name = user.firstname
+        cipher_keys = DecryptedMessage.query.filter_by(user_id=user_id).all()  # Filter by user_id
+        return render_template('received.html', user_initials=user_initials, user_full_name=user_full_name, user_first_name=user_first_name, cipher_keys=cipher_keys)
     else:
         return redirect(url_for('index'))  # Redirect to login if user is not found
-    
+
 
 @app.route('/delete-cipher-key/<int:cipher_id>', methods=['DELETE'])
 def delete_cipher_key(cipher_id):

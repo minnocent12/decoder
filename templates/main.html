@@ -31,8 +31,8 @@
         }
 
         .navbar .logo {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
             margin-left: 20px;
         }
@@ -220,6 +220,31 @@
             
             flex: 0 0 6ch; /* Adjust this value to align properly */
         }
+
+        .decrypted-message-box 
+        {
+            border: 1px solid #007bff;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            display: none; /* Initially hide the decrypted message box */
+        }
+        .decrypted-message 
+        {
+            font-size: 1.2em;
+            white-space: pre-wrap; /* Allow wrapping of long lines */
+            word-break: break-word; /* Break words if they exceed container width */
+        }
+
+
+
+
+
+
+
+
+
     </style>
 </head>
 
@@ -322,8 +347,11 @@
                 <div class="modal-body">
                     <input type="text" id="cipherKeyToDecrypt" class="form-control" placeholder="Enter your cipher key here">
                     <button type="button" class="btn btn-primary mt-3" onclick="decryptMessage()">Decrypt</button>
-                    <div id="decryptedMessage" class="mt-3"></div>
-                    <button id="copyDecryptedMessageButton" type="button" class="btn btn-secondary mt-3" onclick="copyDecryptedMessage()" style="display:none;">Copy Decrypted Message</button>
+                    <!-- Updated decrypted message box -->
+                    <div id="decryptedMessageBox" class="decrypted-message-box">
+                        <p class="decrypted-message" id="decryptedMessageContent"></p>
+                        <button id="copyDecryptedMessageButton" type="button" class="btn btn-secondary mt-3" onclick="copyDecryptedMessage()">Copy Decrypted Message</button>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -389,7 +417,8 @@
             });
         }
 
-        function decryptMessage() {
+        function decryptMessage() 
+        {
             const cipherKey = document.getElementById('cipherKeyToDecrypt').value;
             if (!cipherKey) {
                 toastr.warning('Please enter a cipher key to decrypt.');
@@ -405,31 +434,30 @@
                 })
                 .then(data => {
                     if (data.message) {
-                        document.getElementById('decryptedMessage').textContent = data.message;
-                        document.getElementById('copyDecryptedMessageButton').style.display = 'block';
+                        // Set decrypted message content
+                        document.getElementById('decryptedMessageContent').textContent = data.message;
+                        // Show decrypted message box
+                        document.getElementById('decryptedMessageBox').style.display = 'block';
                         toastr.success('Message decrypted successfully.');
                     } else {
-                        document.getElementById('decryptedMessage').textContent = 'Invalid cipher key or no message found.';
-                        document.getElementById('copyDecryptedMessageButton').style.display = 'none';
                         toastr.error('Invalid cipher key or no message found.');
                     }
                 })
                 .catch(error => {
                     console.error('Error decrypting message:', error);
-                    document.getElementById('decryptedMessage').textContent = 'Error decrypting message. Please try again.';
-                    document.getElementById('copyDecryptedMessageButton').style.display = 'none';
                     toastr.error('Error decrypting message. Please try again.');
                 });
         }
 
-        function copyCipherKey() {
+        function copyCipherKey() 
+        {
             const cipherKey = document.getElementById('generatedCipherKey').textContent;
             copyToClipboard(cipherKey);
             toastr.info('Cipher key copied to clipboard.');
         }
 
         function copyDecryptedMessage() {
-            const decryptedMessage = document.getElementById('decryptedMessage').textContent;
+            const decryptedMessage = document.getElementById('decryptedMessageContent').textContent;
             copyToClipboard(decryptedMessage);
             toastr.info('Decrypted message copied to clipboard.');
         }
@@ -445,19 +473,26 @@
                 });
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            $('#encryptModal').on('hidden.bs.modal', function () {
+        document.addEventListener('DOMContentLoaded', function () 
+        {
+            $('#encryptModal').on('hidden.bs.modal', function () 
+            {
                 document.getElementById('encryptStep1').classList.remove('d-none');
                 document.getElementById('encryptStep2').classList.add('d-none');
                 document.getElementById('messageToEncrypt').value = '';
             });
 
-            $('#decryptModal').on('hidden.bs.modal', function () {
-                document.getElementById('cipherKeyToDecrypt').value = '';
-                document.getElementById('decryptedMessage').textContent = '';
-                document.getElementById('copyDecryptedMessageButton').style.display = 'none';
+            $('#decryptModal').on('hidden.bs.modal', function () 
+            {
+                resetDecryptModal();
             });
         });
+
+        function resetDecryptModal() {
+            document.getElementById('cipherKeyToDecrypt').value = '';
+            document.getElementById('decryptedMessageContent').textContent = '';
+            document.getElementById('decryptedMessageBox').style.display = 'none'; // Hide decrypted message box
+        }
 
     </script>
     {% block scripts %}
